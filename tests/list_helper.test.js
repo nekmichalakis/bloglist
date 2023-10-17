@@ -104,3 +104,39 @@ describe('most liked', () => {
         expect(result).toBe(0)
     })
 })
+
+describe('author with most blogs', () => {
+
+  test('for one blog, the one author', () => {
+    const result = listHelper.mostBlogs(listWithOneBlog)
+    expect(result).toEqual({ author: "Edsger W. Dijkstra", blogs: 1})
+  })
+
+  test('for multiple blogs, the max author blogs', () => {
+    const result = listHelper.mostBlogs(listWithSixBlogs)
+    expect(result).toEqual({ author: "Robert C. Martin", blogs: 3})
+  })
+
+  test('for no blogs, zero', () => {
+    const result = listHelper.mostBlogs([])
+    expect(result).toBe(0)
+  })
+})
+
+describe('author with most likes', () => {
+
+  test('for one blog, the one author', () => {
+    const result = listHelper.mostLikes(listWithOneBlog)
+    expect(result).toEqual({ author: "Edsger W. Dijkstra", likes: 5})
+  })
+
+  test('for multiple blogs, the author with most likes', () => {
+    const result = listHelper.mostLikes(listWithSixBlogs)
+    expect(result).toEqual({ author: "Edsger W. Dijkstra", likes: 17})
+  })
+
+  test('for no blogs, zero', () => {
+    const result = listHelper.mostLikes([])
+    expect(result).toBe(0)
+  })
+})
