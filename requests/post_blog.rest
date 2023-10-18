@@ -1,9 +1,10 @@
 POST http://localhost:3003/api/blog
 Content-Type: application/json
+Authorization: Bearer dfhhfhasdfhf
 
 {
-    "title": "Hellsdgo",
-    "author": "masdfe",
+    "title": "i have a middleware",
+    "author": "its a me",
     "url": "whokngsows",
-    "likes": 7345000
+    "likes": 100
 }
