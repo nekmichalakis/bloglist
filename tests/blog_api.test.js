@@ -2,9 +2,13 @@ const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const api = supertest(app)
+const bcrypt = require('bcrypt')
 const Blog = require('../models/blog')
+const User = require('../models/users')
+mongoose.set("bufferTimeoutMS", 30000)
 
-const initialBlogs = [
+let token = ''
+let initialBlogs = [
     {
         title: 'numberone',
         author: 'me',
@@ -18,6 +22,25 @@ const initialBlogs = [
         likes: 33
     }
 ]
+
+const blogsInDb = async () => {
+    const blogs = await Blog.find({})
+    return blogs.map(blog => blog.toJSON())
+}
+
+beforeAll(async () => {
+    await User.deleteMany({})
+
+    const passwordHash = await bcrypt.hash('sekret', 10)
+    const user = new User({ username: 'root', passwordHash })
+
+    await user.save()
+
+    const response = await api.post('/api/login')
+        .send({ username: 'root', password: 'sekret' })
+    
+    token = response.body.token
+  })
 
 beforeEach(async () => {
     await Blog.deleteMany({})
@@ -52,13 +75,14 @@ test('new blogs get successfully created', async () => {
 
     await api
         .post('/api/blog')
+        .set('Authorization', `Bearer ${token}`)
         .send(newBlog)
         .expect(201)
 
-    const response = await api.get('/api/blog')
-    const titles = response.body.map(r => r.title)
+    const response = await blogsInDb()
+    const titles = response.map(r => r.title)
 
-    expect(response.body).toHaveLength(initialBlogs.length + 1)
+    expect(response).toHaveLength(initialBlogs.length + 1)
     expect(titles).toContain(newBlog.title)
 })
 
@@ -69,10 +93,12 @@ test('when likes are missing add zero', async () => {
         url: 'jakghdkj',
     }
 
-    await api.post('/api/blog').send(newBlog)
+    await api.post('/api/blog')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newBlog)
 
-    const response = await api.get('/api/blog')
-    expect(response.body[initialBlogs.length].likes).toBe(0)
+    const response = await blogsInDb()
+    expect(response[initialBlogs.length].likes).toBe(0)
 })
 
 test('when title or url missing status 400', async () => {
@@ -86,20 +112,37 @@ test('when title or url missing status 400', async () => {
         title: 'ssgsdg'
     }
 
-    await api.post('/api/blog').send(noTitle).expect(400)
-    await api.post('/api/blog').send(noUrl).expect(400)
+    await api.post('/api/blog')
+        .set('Authorization', `Bearer ${token}`)
+        .send(noTitle)
+        .expect(400)
+    await api.post('/api/blog')
+        .set('Authorization', `Bearer ${token}`)
+        .send(noUrl)
+        .expect(400)
 })
 
 test('blog is deleted successfully status 204', async () => {
-    const response = await api.get('/api/blog')
-    firstItemId = response.body[0].id
-    secondItem = response.body[1]
+    const newBlog = {
+        title: 'likelessblog',
+        author: 'me',
+        url: 'jakghdkj',
+    }
 
-    await api.delete(`/api/blog/${firstItemId}`).expect(204)
+    await api.post('/api/blog')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newBlog)
 
-    const afterDelete = await api.get('/api/blog')
-    expect(afterDelete.body.length).toBe(1)
-    expect(afterDelete.body[0]).toEqual(secondItem)
+    const response = await blogsInDb()
+    const lastItemId = response[2].id
+    console.log('ID', lastItemId)
+
+    await api.delete(`/api/blog/${lastItemId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(204)
+
+    const afterDelete = await blogsInDb()
+    expect(afterDelete.length).toBe(initialBlogs.length)
 })
 
 describe('editing a blog', () => {

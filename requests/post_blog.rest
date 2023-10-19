@@ -1,9 +1,9 @@
 POST http://localhost:3003/api/blog
 Content-Type: application/json
-Authorization: Bearer dfhhfhasdfhf
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im5la2kiLCJpZCI6IjY1MmZlMGIwZjJlOWM4MzI2OTRiZWQ2NiIsImlhdCI6MTY5NzY1NTgyMn0.OpUGkt7e7pj8H73VO8KF2G1JDXIY6IlM83oQ8EYKGN0
 
 {
-    "title": "i have a middleware",
+    "title": "i have more middleware",
     "author": "its a me",
     "url": "whokngsows",
     "likes": 100
