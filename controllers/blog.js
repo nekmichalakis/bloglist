@@ -9,11 +9,12 @@ blogRouter.get('/', async (request, response) => {
 
 blogRouter.post('/', async (request, response) => {
   const user = request.user
-  const blog = new Blog({...request.body, user: user.id})
+  const newBlog = new Blog({...request.body, user: user.id})
   
-  const savedBlog = await blog.save()
+  const savedBlog = await newBlog.save()
   user.blogs = user.blogs.concat(savedBlog._id)
   await user.save()
+  await savedBlog.populate('user', { username: 1 })
 
   response.status(201).json(savedBlog)
 })
@@ -38,6 +39,8 @@ blogRouter.put('/:id', async (request, response) => {
     newBlog,
     { new: true, runValidators: true, context: 'query' }
   )
+    .populate('user', { username: 1 })
+
   response.json(updatedBlog)
 })
 
